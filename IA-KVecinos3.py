@@ -99,32 +99,35 @@ def knn_train_test_split(data, k):
     
     return predictions, test_indices
 
+def normalizar_data(data):
+    # # Seleccionar solo las columnas numéricas para la normalización
+    #numeric_columns = ['Variable1', 'Variable2', 'Variable3']
+    numeric_columns = list(data.columns[:-1])
+    numeric_data = data[numeric_columns]
+
+    # Inicializar el objeto MinMaxScaler
+    scaler = MinMaxScaler()
+
+    # Normalizar los datos numéricos
+    normalized_data = scaler.fit_transform(numeric_data)
+
+    # Convertir los datos normalizados de vuelta a DataFrame
+    normalized_df = pd.DataFrame(normalized_data, columns=numeric_columns)
+
+    # Agregar la columna 'Clase' al DataFrame normalizado
+    normalized_df[data.columns[-1]] = data[data.columns[-1]]
+
+    print('\nMostrar el DataFrame original')
+    print(data)
+
+    print('\nMostrar el DataFrame normalizado')
+    print(normalized_df)
+    
+    return normalized_data
 
 # Load data from CSV into a DataFrame
 csv_file = 'kvecinos3.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
-
-# # Seleccionar solo las columnas numéricas para la normalización
-# numeric_columns = ['Variable1', 'Variable2', 'Variable3']
-# numeric_data = data[numeric_columns]
-
-# # Inicializar el objeto MinMaxScaler
-# scaler = MinMaxScaler()
-
-# # Normalizar los datos numéricos
-# normalized_data = scaler.fit_transform(numeric_data)
-
-# # Convertir los datos normalizados de vuelta a DataFrame
-# normalized_df = pd.DataFrame(normalized_data, columns=numeric_columns)
-
-# # Agregar la columna 'Clase' al DataFrame normalizado
-# normalized_df['Clase'] = data['Clase']
-
-# print('\nMostrar el DataFrame original')
-# print(data)
-
-# print('\nMostrar el DataFrame normalizado')
-# print(normalized_df)
 
 print(f"\n{data}")
 
@@ -134,109 +137,116 @@ def menu():
         print("1. Calcular los k-vecinos de un registro seleccionado")
         print("2. Predecir la clase de un nuevo registro")
         print("3. Entrenamiento y Testeo")
-        print("4. Salir")
+        print("4. Normalizar data")
+        print("5. Salir")
         choice = input("Opcion: ")
 
-        if choice == '1':
-            # Permitir al usuario seleccionar un registro de referencia
-            print("\n======Comparar registro seleccionado======")
-            
-            while True:    
-                #reference_index = int(input("Índice del registro de referencia: "))
-                try:
-                    reference_index = int(input("Índice del registro de referencia: "))
-                    if reference_index < 0 or reference_index >= len(data):
-                        print("Índice fuera de rango. Por favor, seleccione un índice válido.")
-                    else:
-                        break
-                except ValueError:
-                    print("Por favor, ingrese un número entero.")
+        try:
+            if choice == '1':
+                # Permitir al usuario seleccionar un registro de referencia
+                print("\n======Comparar registro seleccionado======")
+                
+                while True:    
+                    #reference_index = int(input("Índice del registro de referencia: "))
+                    try:
+                        reference_index = int(input("Índice del registro de referencia: "))
+                        if reference_index < 0 or reference_index >= len(data):
+                            print("Índice fuera de rango. Por favor, seleccione un índice válido.")
+                        else:
+                            break
+                    except ValueError:
+                        print("Por favor, ingrese un número entero.")
 
-            # Permitir al usuario especificar el valor de k
-            #k = int(input("Ingrese el valor de k para calcular los k-vecinos más cercanos: "))
-            while True:
-                try:
-                    k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
-                    if k <= 0:
-                        print("Por favor, ingrese un valor de k mayor que cero.")
-                    else:
-                        break
-                except ValueError:
-                    print("Por favor, ingrese un número entero mayor que cero.")
+                # Permitir al usuario especificar el valor de k
+                #k = int(input("Ingrese el valor de k para calcular los k-vecinos más cercanos: "))
+                while True:
+                    try:
+                        k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
+                        if k <= 0:
+                            print("Por favor, ingrese un valor de k mayor que cero.")
+                        else:
+                            break
+                    except ValueError:
+                        print("Por favor, ingrese un número entero mayor que cero.")
 
-            # Calcular k-vecinos más cercanos
-            neighbors,predicted_class = k_nearest_neighbors(data, k, reference_index)
+                # Calcular k-vecinos más cercanos
+                neighbors,predicted_class = k_nearest_neighbors(data, k, reference_index)
 
-            # Mostrar los resultados
-            print(f"\nLos valores del registro {reference_index}:{data.iloc[reference_index].to_list()}")
-            print(f'La prediccion de su clase es: {predicted_class}')
+                # Mostrar los resultados
+                print(f"\nLos valores del registro {reference_index}:{data.iloc[reference_index].to_list()}")
+                print(f'La prediccion de su clase es: {predicted_class}')
 
-            # Mostrar los resultados
-            print(f"\nLos {k} vecinos más cercanos al registro {reference_index} son:")
-            for neighbor_index, distance, neighbor_class in neighbors:
-                print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
+                # Mostrar los resultados
+                print(f"\nLos {k} vecinos más cercanos al registro {reference_index} son:")
+                for neighbor_index, distance, neighbor_class in neighbors:
+                    print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
 
-        if choice == '2':
-            # Permitir al usuario ingresar los valores del nuevo registro
-            print("\n====Ingresa los valores del nuevo registro====")
-            
-            new_point_values = []
-            for column in data.columns[:-1]:  # Exclude the last column (class)
-                value = float(input(f"Ingrese el valor de '{column}': "))
-                new_point_values.append(value)
+            if choice == '2':
+                # Permitir al usuario ingresar los valores del nuevo registro
+                print("\n====Ingresa los valores del nuevo registro====")
+                
+                new_point_values = []
+                for column in data.columns[:-1]:  # Exclude the last column (class)
+                    value = float(input(f"Ingrese el valor de '{column}': "))
+                    new_point_values.append(value)
 
-            # Convertir los valores del nuevo registro a un array numpy
-            new_point = np.array(new_point_values)
+                # Convertir los valores del nuevo registro a un array numpy
+                new_point = np.array(new_point_values)
 
-            # Permitir al usuario especificar el valor de k
-            #k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
-            while True:
-                try:
-                    k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
-                    if k <= 0:
-                        print("Por favor, ingrese un valor de k mayor que cero.")
-                    else:
-                        break
-                except ValueError:
-                    print("Por favor, ingrese un número entero mayor que cero.")
+                # Permitir al usuario especificar el valor de k
+                #k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
+                while True:
+                    try:
+                        k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
+                        if k <= 0:
+                            print("Por favor, ingrese un valor de k mayor que cero.")
+                        else:
+                            break
+                    except ValueError:
+                        print("Por favor, ingrese un número entero mayor que cero.")
 
-            # Clasificar el nuevo registro
-            predicted_class, k_nearest = neighbors_predict_class(data, k, new_point)
+                # Clasificar el nuevo registro
+                predicted_class, k_nearest = neighbors_predict_class(data, k, new_point)
 
-            # Mostrar el resultado
-            print(f"\nLa clase predicha para el nuevo registro es: {predicted_class}")
-            print(f"\nLos {k} vecinos más cercanos son:")
-            for neighbor_index, distance, neighbor_class in k_nearest:
-                print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
-        
-        if choice == '3':
-            # Permitir al usuario especificar el valor de k
-            while True:
-                try:
-                    k = int(input("Ingrese el valor de k para realizar la clasificación: "))
-                    if k <= 0:
-                        print("Por favor, ingrese un valor de k mayor que cero.")
-                    else:
-                        break
-                except ValueError:
-                    print("Por favor, ingrese un número entero mayor que cero.")
-            
-            # Realizar k-NN con conjunto de entrenamiento y prueba
-            predictions, test_indices = knn_train_test_split(data, k)
-
-            # Mostrar los resultados
-            print(f"\n=== Resultados del k-NN con conjunto de entrenamiento y prueba (K={k}) ===\n")
-            for i, (predicted_class, true_class, k_nearest, test_index) in enumerate(predictions):
-                print(f"Registro de prueba {i + 1} (Índice: {test_index} : {data.iloc[test_index].tolist()})")
-                print(f"Clase verdadera: {true_class}, Clase predicha: {predicted_class}")
-                print(f"Vecinos más cercanos:")
+                # Mostrar el resultado
+                print(f"\nLa clase predicha para el nuevo registro es: {predicted_class}")
+                print(f"\nLos {k} vecinos más cercanos son:")
                 for neighbor_index, distance, neighbor_class in k_nearest:
-                    print(f"Índice: {neighbor_index}, Distancia: {distance:.4f}, Clase: {neighbor_class}")
-                print("\n")
+                    print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
             
-        if choice == '4':
-            print("Saliendo del programa...")
-            break
+            if choice == '3':
+                # Permitir al usuario especificar el valor de k
+                while True:
+                    try:
+                        k = int(input("Ingrese el valor de k para realizar la clasificación: "))
+                        if k <= 0:
+                            print("Por favor, ingrese un valor de k mayor que cero.")
+                        else:
+                            break
+                    except ValueError:
+                        print("Por favor, ingrese un número entero mayor que cero.")
+                
+                # Realizar k-NN con conjunto de entrenamiento y prueba
+                predictions, test_indices = knn_train_test_split(data, k)
+
+                # Mostrar los resultados
+                print(f"\n=== Resultados del k-NN con conjunto de entrenamiento y prueba (K={k}) ===\n")
+                for i, (predicted_class, true_class, k_nearest, test_index) in enumerate(predictions):
+                    print(f"Registro de prueba {i + 1} (Índice: {test_index} : {data.iloc[test_index].tolist()})")
+                    print(f"Clase verdadera: {true_class}, Clase predicha: {predicted_class}")
+                    print(f"Vecinos más cercanos:")
+                    for neighbor_index, distance, neighbor_class in k_nearest:
+                        print(f"Índice: {neighbor_index}, Distancia: {distance:.4f}, Clase: {neighbor_class}")
+                    print("\n")
+                
+            if choice == '4':
+                normalizar_data(data)
+                
+            if choice == '5':
+                print("Saliendo del programa...")
+                break
+        except Exception as e:
+            print(e)
     
 menu()
 
