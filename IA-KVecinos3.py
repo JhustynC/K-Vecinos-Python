@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
+
 # Inicializar el objeto StandardScaler
 scaler = StandardScaler()
 
@@ -62,9 +63,8 @@ def neighbors_predict_class(df, k, new_point):
     
     return predicted_class, k_nearest
 
-
 # Load data from CSV into a DataFrame
-csv_file = 'kvecinos3.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'kvecinos.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 # # Seleccionar solo las columnas numéricas para la normalización
@@ -89,12 +89,11 @@ data = pd.read_csv(csv_file)
 # print('\nMostrar el DataFrame normalizado')
 # print(normalized_df)
 
-print(data)
-
+print(f"\n{data}")
 
 def menu():
     while True:
-        print("\nMenú:")
+        print("\n========================MENU=======================")
         print("1. Calcular los k-vecinos de un registro seleccionado")
         print("2. Predecir la clase de un nuevo registro")
         print("3. Salir")
@@ -142,6 +141,7 @@ def menu():
         elif choice == '2':
             # Permitir al usuario ingresar los valores del nuevo registro
             print("\n====Ingresa los valores del nuevo registro====")
+            
             new_point_values = []
             for column in data.columns[:-1]:  # Exclude the last column (class)
                 value = float(input(f"Ingrese el valor de '{column}': "))
@@ -174,8 +174,6 @@ def menu():
         elif choice == '3':
             print("Saliendo del programa...")
             break
-    else:
-        print("Opción inválida. Por favor, seleccione 1, 2 o 3.")
     
 menu()
 
