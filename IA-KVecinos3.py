@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 
@@ -71,8 +72,36 @@ def neighbors_predict_class(df, k, new_point):
     
     return predicted_class, k_nearest
 
+def knn_train_test_split(data, k):
+    """
+    Train and test the k-NN algorithm on the given DataFrame with train/test split.
+    """
+    # Split the data into training and testing sets
+    # indice = int(0.8 * data.shape[0])
+    # train = data.iloc[:indice] # selecciona solo las filas hasta ese indice
+    # test = data.iloc[indice:]
+    
+    # Split the data into training and testing sets
+    train, test = train_test_split(data, test_size=0.2, random_state=42)
+    # print('Entrenamiento')
+    # print(train)
+    
+    # Store the indices of the test set
+    test_indices = test.index.tolist()
+    
+    # Iterate through the test set and make predictions
+    predictions = []
+    for i, row in test.iterrows():
+        new_point = row[:-1]
+        true_class = row.iloc[-1]
+        predicted_class, k_nearest = neighbors_predict_class(train, k, new_point)
+        predictions.append((predicted_class, true_class, k_nearest, i))
+    
+    return predictions, test_indices
+
+
 # Load data from CSV into a DataFrame
-csv_file = 'kvecinos2.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'kvecinos3.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 # # Seleccionar solo las columnas numéricas para la normalización
@@ -104,7 +133,7 @@ def menu():
         print("\n========================MENU=======================")
         print("1. Calcular los k-vecinos de un registro seleccionado")
         print("2. Predecir la clase de un nuevo registro")
-        print("3. K Optimo de los datos")
+        print("3. Entrenamiento y Testeo")
         print("4. Salir")
         choice = input("Opcion: ")
 
@@ -181,16 +210,29 @@ def menu():
                 print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
         
         if choice == '3':
-            #nombres_columnas = list(data.columns)
-            indice = int(0.8 * data.shape[0])  # calcula el indice del 80% de las filas
-            print("\nSe toma el 80% de los datos, que son: ", indice)
-            #nombre_ultima_columna = data.columns[-1]  # obtiene el nombre de la ultima columna
-            datosEntrenamiento = data.iloc[:indice]    # selecciona solo las filas hasta ese indice
-            datosPrueba = data.iloc[indice:]  # selecciona solo las filas desde ese indice
-            print("\n=======DatosEntrenamiento=======")
-            print(datosEntrenamiento)
-            print("\n=======DatosPrueba=======")
-            print(datosPrueba)
+            # Permitir al usuario especificar el valor de k
+            while True:
+                try:
+                    k = int(input("Ingrese el valor de k para realizar la clasificación: "))
+                    if k <= 0:
+                        print("Por favor, ingrese un valor de k mayor que cero.")
+                    else:
+                        break
+                except ValueError:
+                    print("Por favor, ingrese un número entero mayor que cero.")
+            
+            # Realizar k-NN con conjunto de entrenamiento y prueba
+            predictions, test_indices = knn_train_test_split(data, k)
+
+            # Mostrar los resultados
+            print(f"\n=== Resultados del k-NN con conjunto de entrenamiento y prueba (K={k}) ===\n")
+            for i, (predicted_class, true_class, k_nearest, test_index) in enumerate(predictions):
+                print(f"Registro de prueba {i + 1} (Índice: {test_index} : {data.iloc[test_index].tolist()})")
+                print(f"Clase verdadera: {true_class}, Clase predicha: {predicted_class}")
+                print(f"Vecinos más cercanos:")
+                for neighbor_index, distance, neighbor_class in k_nearest:
+                    print(f"Índice: {neighbor_index}, Distancia: {distance:.4f}, Clase: {neighbor_class}")
+                print("\n")
             
         if choice == '4':
             print("Saliendo del programa...")
