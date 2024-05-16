@@ -1,11 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
-
-# Inicializar el objeto StandardScaler
-scaler = StandardScaler()
 
 def euclidean_distance(point1, point2):
     """
@@ -99,7 +95,7 @@ def knn_train_test_split(data, k):
     
     return predictions, test_indices
 
-def normalizar_data(data):
+def normalize_data1(data):
     # # Seleccionar solo las columnas numéricas para la normalización
     #numeric_columns = ['Variable1', 'Variable2', 'Variable3']
     numeric_columns = list(data.columns[:-1])
@@ -125,13 +121,35 @@ def normalizar_data(data):
     
     return normalized_data
 
-# Load data from CSV into a DataFrame
-csv_file = 'kvecinos3.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
-data = pd.read_csv(csv_file)
+def normalize_data2(data):
+    """
+    Normalize numerical columns in the DataFrame and handle missing values.
+    Categorical columns remain unchanged.
+    """
+    # Handle missing values by filling them with the mean of the column
+    df = data.copy()
+    
+    for col in df.select_dtypes(include=[np.number]):
+        df[col] = pd.to_numeric(df[col], errors='coerce')  # Convert non-numeric values to NaN
+        df[col].fillna(df[col].mean(), inplace=True)
 
-print(f"\n{data}")
+    # Normalize numerical columns (Min-Max scaling)
+    for col in df.select_dtypes(include=[np.number]):
+        min_col = df[col].min()
+        max_col = df[col].max()
+        df[col] = (df[col] - min_col) / (max_col - min_col)
+
+    print(df)
+    
+    return df
 
 def menu():
+    # Load data from CSV into a DataFrame
+    csv_file = 'kvecinos3.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+    data = pd.read_csv(csv_file)
+
+    print(f"\n{data}")
+        
     while True:
         print("\n========================MENU=======================")
         print("1. Calcular los k-vecinos de un registro seleccionado")
@@ -240,7 +258,7 @@ def menu():
                     print("\n")
                 
             if choice == '4':
-                normalizar_data(data)
+                data = normalize_data2(data)
                 
             if choice == '5':
                 print("Saliendo del programa...")
@@ -248,48 +266,5 @@ def menu():
         except Exception as e:
             print(e)
     
-menu()
-
-#============================Verficacion de clase========================
-# # Permitir al usuario seleccionar un registro de referencia
-# print("\n======Comparar registro seleccionado======")
-# reference_index = int(input("Índice del registro de referencia: "))
-
-# # Permitir al usuario especificar el valor de k
-# k = int(input("Ingrese el valor de k para calcular los k-vecinos más cercanos: "))
-
-# # Calcular k-vecinos más cercanos
-# neighbors = k_nearest_neighbors(data, k, reference_index)
-
-# # Mostrar los resultados
-# print(f"\nEl registro del registro {reference_index}:")
-# print(data.iloc[reference_index].to_list())
-
-# # Mostrar los resultados
-# print(f"\nLos {k} vecinos más cercanos al registro {reference_index} son:")
-# for neighbor_index, distance, neighbor_class in neighbors:
-#     print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
-    
-    
-#==========================Predecir Clase==================================
-# Permitir al usuario ingresar los valores del nuevo registro
-# print("\n====Ingresa los valores del nuevo registro====")
-# new_point_values = []
-# for column in data.columns[:-1]:  # Exclude the last column (class)
-#     value = float(input(f"Ingrese el valor de '{column}': "))
-#     new_point_values.append(value)
-
-# # Convertir los valores del nuevo registro a un array numpy
-# new_point = np.array(new_point_values)
-
-# # Permitir al usuario especificar el valor de k
-# k = int(input("Ingrese el valor de k para clasificar el nuevo registro: "))
-
-# # Clasificar el nuevo registro
-# predicted_class, k_nearest = neighbors_predict_class(data, k, new_point)
-
-# # Mostrar el resultado
-# print(f"\nLa clase predicha para el nuevo registro es: {predicted_class}")
-# print(f"\nLos {k} vecinos más cercanos son:")
-# for neighbor_index, distance, neighbor_class in k_nearest:
-#     print(f"Índice: {neighbor_index}, Distancia: {distance}, Clase: {neighbor_class}")
+if __name__ == '__main__':
+    menu()
