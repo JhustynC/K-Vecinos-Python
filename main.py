@@ -106,11 +106,11 @@ def find_best_k(data, max_k):
     y = data.iloc[:, -1]  # La última columna es la clase
     
     # Normalizar los datos
-    df = data.copy()
-    X = normalize_data2(df)
+    # df = data.copy()
+    # X = normalize_data2(df)
     
-    # Convertir las características normalizadas de vuelta a DataFrame para mantener el índice alineado
-    X = pd.DataFrame(X, columns=df.columns[:-1])
+    # # Convertir las características normalizadas de vuelta a DataFrame para mantener el índice alineado
+    # X = pd.DataFrame(X, columns=df.columns[:-1])
 
     # Determinar el número de splits basado en el tamaño de la clase más pequeña
     # Mientras mas splits mas costo computacional
@@ -326,7 +326,7 @@ def menu():
             print(e)
     
 # Load data from CSV into a DataFrame
-csv_file = 'kvecinos4.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'kvecinos5.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 if __name__ == '__main__':
