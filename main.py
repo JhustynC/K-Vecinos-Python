@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
 
 def euclidean_distance(point1, point2):
@@ -95,6 +97,57 @@ def knn_train_test_split(data, k):
     
     return predictions, test_indices
 
+def find_best_k(data, max_k):
+    """
+    Find the best value of k for k-NN using cross-validation.
+    """
+    # Separar las características y la clase
+    X = data.iloc[:, :-1]  # Todas las columnas excepto la última
+    y = data.iloc[:, -1]  # La última columna es la clase
+    
+    # Normalizar los datos
+    df = data.copy()
+    X = normalize_data2(df)
+    
+    # Convertir las características normalizadas de vuelta a DataFrame para mantener el índice alineado
+    X = pd.DataFrame(X, columns=df.columns[:-1])
+
+    # Determinar el número de splits basado en el tamaño de la clase más pequeña
+    # Mientras mas splits mas costo computacional
+    min_class_size = y.value_counts().min()
+    n_splits = min(5, min_class_size)
+
+    # Lista para almacenar los puntajes de precisión
+    accuracy_scores = []
+
+    # Probar k de 1 a max_k
+    for k in range(1, max_k + 1):
+        knn = KNeighborsClassifier(n_neighbors=k)
+        skf = StratifiedKFold(n_splits=n_splits)
+        
+        # Asegurarse de que k no sea mayor que el tamaño del conjunto de entrenamiento en cada fold
+        valid_scores = []
+        for train_index, test_index in skf.split(X, y):
+            if k <= len(train_index):  # Check if k is valid for this split
+                X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+                y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+                knn.fit(X_train, y_train)
+                score = knn.score(X_test, y_test)
+                valid_scores.append(score)
+            else:
+                valid_scores.append(np.nan)  # Append NaN if k is not valid
+        
+        # Promediar los puntajes válidos
+        if valid_scores:
+            accuracy_scores.append(np.nanmean(valid_scores))
+        else:
+            accuracy_scores.append(np.nan)
+
+    # Determinar el k con el puntaje de precisión más alto
+    best_k = accuracy_scores.index(max(accuracy_scores)) + 1
+
+    return best_k, accuracy_scores
+
 def normalize_data1(data):
     # # Seleccionar solo las columnas numéricas para la normalización
     #numeric_columns = ['Variable1', 'Variable2', 'Variable3']
@@ -144,17 +197,15 @@ def normalize_data2(data):
     return df
 
 def menu():
-    # Load data from CSV into a DataFrame
-    csv_file = 'kvecinos3.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
-    data = pd.read_csv(csv_file)
 
+    global data
     print(f"\n{data}")
         
     while True:
         print("\n========================MENU=======================")
         print("1. Calcular los k-vecinos de un registro seleccionado")
         print("2. Predecir la clase de un nuevo registro")
-        print("3. Entrenamiento y Testeo")
+        print("3. Mejor K (Entrenamiento y Testeo)")
         print("4. Normalizar data")
         print("5. Salir")
         choice = input("Opcion: ")
@@ -234,28 +285,36 @@ def menu():
             
             if choice == '3':
                 # Permitir al usuario especificar el valor de k
-                while True:
-                    try:
-                        k = int(input("Ingrese el valor de k para realizar la clasificación: "))
-                        if k <= 0:
-                            print("Por favor, ingrese un valor de k mayor que cero.")
-                        else:
-                            break
-                    except ValueError:
-                        print("Por favor, ingrese un número entero mayor que cero.")
+                # while True:
+                #     try:
+                #         k = int(input("Ingrese el valor de k para realizar la clasificación: "))
+                #         if k <= 0:
+                #             print("Por favor, ingrese un valor de k mayor que cero.")
+                #         else:
+                #             break
+                #     except ValueError:
+                #         print("Por favor, ingrese un número entero mayor que cero.")
                 
-                # Realizar k-NN con conjunto de entrenamiento y prueba
-                predictions, test_indices = knn_train_test_split(data, k)
+                # # Realizar k-NN con conjunto de entrenamiento y prueba
+                # predictions, test_indices = knn_train_test_split(data, k)
 
-                # Mostrar los resultados
-                print(f"\n=== Resultados del k-NN con conjunto de entrenamiento y prueba (K={k}) ===\n")
-                for i, (predicted_class, true_class, k_nearest, test_index) in enumerate(predictions):
-                    print(f"Registro de prueba {i + 1} (Índice: {test_index} : {data.iloc[test_index].tolist()})")
-                    print(f"Clase verdadera: {true_class}, Clase predicha: {predicted_class}")
-                    print(f"Vecinos más cercanos:")
-                    for neighbor_index, distance, neighbor_class in k_nearest:
-                        print(f"Índice: {neighbor_index}, Distancia: {distance:.4f}, Clase: {neighbor_class}")
-                    print("\n")
+                # # Mostrar los resultados
+                # print(f"\n=== Resultados del k-NN con conjunto de entrenamiento y prueba (K={k}) ===\n")
+                # for i, (predicted_class, true_class, k_nearest, test_index) in enumerate(predictions):
+                #     print(f"Registro de prueba {i + 1} (Índice: {test_index} : {data.iloc[test_index].tolist()})")
+                #     print(f"Clase verdadera: {true_class}, Clase predicha: {predicted_class}")
+                #     print(f"Vecinos más cercanos:")
+                #     for neighbor_index, distance, neighbor_class in k_nearest:
+                #         print(f"Índice: {neighbor_index}, Distancia: {distance:.4f}, Clase: {neighbor_class}")
+                #     print("\n")
+                # Encontrar el mejor valor de k
+                max_k = 24
+                best_k, accuracy_scores = find_best_k(data, max_k)
+
+                print(f"\nEl mejor valor de k es: {best_k}")
+                print("\nPuntajes de precisión para cada k:")
+                for k in range(1, max_k + 1):
+                    print(f"k={k}: {accuracy_scores[k-1]:.4f}")
                 
             if choice == '4':
                 data = normalize_data2(data)
@@ -266,5 +325,9 @@ def menu():
         except Exception as e:
             print(e)
     
+# Load data from CSV into a DataFrame
+csv_file = 'kvecinos.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+data = pd.read_csv(csv_file)
+
 if __name__ == '__main__':
     menu()
