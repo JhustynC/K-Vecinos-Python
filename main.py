@@ -243,7 +243,7 @@ def menu():
 
                 # Mostrar los resultados
                 print(f"\nLos valores del registro {reference_index}:{data.iloc[reference_index].to_list()}")
-                print(f'La prediccion de su clase es: {predicted_class}')
+                print(f'\nLa prediccion de su clase es: {predicted_class}')
 
                 # Mostrar los resultados
                 print(f"\nLos {k} vecinos más cercanos al registro {reference_index} son:")
@@ -326,7 +326,7 @@ def menu():
             print(e)
     
 # Load data from CSV into a DataFrame
-csv_file = 'kvecinos.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'kvecinos4.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 if __name__ == '__main__':
