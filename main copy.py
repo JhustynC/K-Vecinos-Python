@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, StratifiedKFold
+from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-
+import matplotlib.pyplot as plt
 
 def euclidean_distance(point1, point2):
     """
@@ -167,38 +168,47 @@ def find_best_k(data, max_k):
     return best_k, accuracy_scores
 
 def find_best_k2(data, max_k):
-    """
-    Find the best value of k for k-NN using a single train/test split.
-    
-    Parameters:
-    data (pd.DataFrame): The dataset containing features and the target variable in the last column.
-    max_k (int): The maximum number of neighbors to test.
-    normalize (bool): Whether to normalize the data or not.
-    
-    Returns:
-    tuple: Best value of k and a list of accuracy scores for each k.
-    """
-    
-    # Separar las características y la clase
-    X = data.iloc[:, :-1]
-    y = data.iloc[:, -1]
-    
-    # Dividir en conjuntos de entrenamiento y prueba
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
-    
-    # Lista para almacenar los puntajes de precisión
-    accuracy_scores = []
-    
-    # Probar k de 1 a max_k
-    for k in range(1, max_k + 1):
+
+    df = data
+    # Dividir en los datos (X) y clase (y)
+    X = df.drop(columns=['id', 'TipoEmpleado'])
+    y = df['TipoEmpleado']
+
+    # Dividir los datos en entrenamiento (80%) y prueba (20%)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Encontrar el mejor valor de k usando el conjunto de prueba
+    k_range = range(1, max_k+1)
+    k_scores = []
+    errors = [] #Error=1−Precision
+
+    for k in k_range:
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train, y_train)
-        score = knn.score(X_test, y_test)
-        accuracy_scores.append(score)
-    
-    best_k = accuracy_scores.index(max(accuracy_scores)) + 1
-    
-    return best_k, accuracy_scores
+        y_pred = knn.predict(X_test)
+        score = accuracy_score(y_test, y_pred)
+        error = 1 - score
+        k_scores.append(score)
+        errors.append(error)
+
+    # Imprimir los resultados
+    for k, score, error in zip(k_range, k_scores, errors):
+        print(f"k={k}, accuracy={score:.4f}, error={error:.4f}")
+
+    # Encontrar el valor óptimo de k
+    best_k = k_range[np.argmax(k_scores)]
+    print(f"El mejor valor de k es: {best_k} con una exactitud de {max(k_scores):.4f}")
+
+    # Graficar los errores
+    plt.figure(figsize=(10, 6))
+    plt.plot(k_range, errors, marker='o', linestyle='dashed', color='b', label='Tasa de Error')
+    plt.xlabel('Valor de k')
+    plt.ylabel('Tasa de Error')
+    plt.title('Tasa de Error vs. Valor de k')
+    plt.xticks(k_range)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 def normalize_data1(data):
     # # Seleccionar solo las columnas numéricas para la normalización
@@ -361,8 +371,8 @@ def menu():
                 #         print(f"Índice: {neighbor_index}, Distancia: {distance:.4f}, Clase: {neighbor_class}")
                 #     print("\n")
                 # Encontrar el mejor valor de k
-                max_k = 24
-                best_k, accuracy_scores = find_best_k(data, max_k)
+                max_k = 6
+                best_k, accuracy_scores = find_best_k2(data, max_k)
 
                 print(f"\nEl mejor valor de k es: {best_k}")
                 print("\nPuntajes de precisión para cada k:")
@@ -371,6 +381,8 @@ def menu():
                 
             if choice == '4':
                 data = normalize_data2(data)
+                max_k = 6
+                find_best_k2(data, max_k)
                 
             if choice == '5':
                 print("Saliendo del programa...")
@@ -379,25 +391,11 @@ def menu():
             print(e)
 
 
-if __name__ == '__main__':
-    menu()
 
 
 # Cargar los datos
-data = {
-    'id': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-    'Sueldo': [10000, 20000, 15000, 30000, 10000, 40000, 25000, 20000, 20000, 30000, 50000, 8000, 20000, 10000, 8000],
-    'Casado': ['Si', 'No', 'Si', 'Si', 'Si', 'No', 'No', 'No', 'Si', 'Si', 'No', 'Si', 'No', 'No', 'No'],
-    'Carro': ['No', 'Si', 'Si', 'Si', 'Si', 'Si', 'No', 'Si', 'Si', 'Si', 'No', 'Si', 'No', 'Si', 'Si'],
-    'Hijos': [0, 1, 2, 1, 0, 0, 0, 0, 3, 2, 0, 2, 0, 0, 0],
-    'Alq/Prop': ['Alquiler', 'Alquiler', 'Prop', 'Alquiler', 'Prop', 'Alquiler', 'Alquiler', 'Prop', 'Prop', 'Prop', 'Alquiler', 'Prop', 'Alquiler', 'Alquiler', 'Alquiler'],
-    'Sindic.': ['No', 'Si', 'Si', 'No', 'Si', 'Si', 'Si', 'Si', 'No', 'No', 'No', 'No', 'No', 'Si', 'No'],
-    'Bajas/Anio': [7, 3, 5, 15, 1, 3, 0, 2, 7, 1, 2, 3, 27, 0, 3],
-    'Antiguedad': [15, 3, 10, 7, 6, 16, 8, 6, 5, 20, 12, 1, 5, 7, 2],
-    'Sexo': ['H', 'M', 'H', 'M', 'H', 'M', 'H', 'M', 'H', 'H', 'M', 'H', 'M', 'H', 'H'],
-    'TipoEmpleado': [1, 0, 1, 2, 2, 0, 1, 0, 2, 1, 0, 1, 0, 2, 1]
-}
-
+csv_file = 'DatosTest.csv' 
+data = pd.read_csv(csv_file, delimiter=';')
 df = pd.DataFrame(data)
 
 # Codificar variables categóricas
@@ -414,12 +412,13 @@ scaler = StandardScaler()
 df[['Sueldo', 'Hijos', 'Bajas/Anio', 'Antiguedad']] = scaler.fit_transform(df[['Sueldo', 'Hijos', 'Bajas/Anio', 'Antiguedad']])
 
 # Mostrar el DataFrame normalizado
-print(df)
+data = df
+print(data)
 
-
-# Load data from CSV into a DataFrame
-csv_file = 'DatosTest.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
-data = pd.read_csv(csv_file)
+if __name__ == '__main__':
+    menu()
+    
+    
 
 
 
