@@ -164,6 +164,40 @@ def find_best_k(data, max_k):
 
     return best_k, accuracy_scores
 
+def find_best_k2(data, max_k):
+    """
+    Find the best value of k for k-NN using a single train/test split.
+    
+    Parameters:
+    data (pd.DataFrame): The dataset containing features and the target variable in the last column.
+    max_k (int): The maximum number of neighbors to test.
+    normalize (bool): Whether to normalize the data or not.
+    
+    Returns:
+    tuple: Best value of k and a list of accuracy scores for each k.
+    """
+    
+    # Separar las características y la clase
+    X = data.iloc[:, :-1]
+    y = data.iloc[:, -1]
+    
+    # Dividir en conjuntos de entrenamiento y prueba
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+    
+    # Lista para almacenar los puntajes de precisión
+    accuracy_scores = []
+    
+    # Probar k de 1 a max_k
+    for k in range(1, max_k + 1):
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(X_train, y_train)
+        score = knn.score(X_test, y_test)
+        accuracy_scores.append(score)
+    
+    best_k = accuracy_scores.index(max(accuracy_scores)) + 1
+    
+    return best_k, accuracy_scores
+
 def normalize_data1(data):
     # # Seleccionar solo las columnas numéricas para la normalización
     #numeric_columns = ['Variable1', 'Variable2', 'Variable3']
@@ -343,7 +377,7 @@ def menu():
             print(e)
     
 # Load data from CSV into a DataFrame
-csv_file = 'kvecinos5.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'temperaturaCuenca.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 if __name__ == '__main__':
