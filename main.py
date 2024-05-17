@@ -102,7 +102,21 @@ def find_best_k(data, max_k):
     """
     print(data)
     
-    
+    while True:
+        try:
+            print("Normalizar:")
+            print("1) Si")
+            print("2) No")
+            op = input('Opcion: ')
+            if op == '1':
+                data = normalize_data2(data)
+                break
+            else:
+                break
+        except Exception as e:
+            print(e)
+       
+        
     # Separar las características y la clase
     X = data.iloc[:, :-1]  # Todas las columnas excepto la última
     y = data.iloc[:, -1]  # La última columna es la clase
