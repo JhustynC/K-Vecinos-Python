@@ -100,6 +100,9 @@ def find_best_k(data, max_k):
     """
     Find the best value of k for k-NN using cross-validation.
     """
+    print(data)
+    
+    
     # Separar las características y la clase
     X = data.iloc[:, :-1]  # Todas las columnas excepto la última
     y = data.iloc[:, -1]  # La última columna es la clase
@@ -178,8 +181,8 @@ def normalize_data2(data):
     Normalize numerical columns in the DataFrame and handle missing values.
     Categorical columns remain unchanged.
     """
-    # Handle missing values by filling them with the mean of the column
-    df = data.copy()
+    # Copy of dataframe exclude last colum
+    df = data.iloc[:, :-1].copy()
     
     for col in df.select_dtypes(include=[np.number]):
         df[col] = pd.to_numeric(df[col], errors='coerce')  # Convert non-numeric values to NaN
@@ -191,6 +194,7 @@ def normalize_data2(data):
         max_col = df[col].max()
         df[col] = (df[col] - min_col) / (max_col - min_col)
 
+    df[data.columns[-1]] = data[data.columns[-1]]
     print(df)
     
     return df
@@ -325,7 +329,7 @@ def menu():
             print(e)
     
 # Load data from CSV into a DataFrame
-csv_file = 'kvecinos5.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'temperaturaCuenca.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 if __name__ == '__main__':
