@@ -343,7 +343,7 @@ def menu():
             print(e)
     
 # Load data from CSV into a DataFrame
-csv_file = 'temperaturaCuenca.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
+csv_file = 'kvecinos5.csv'  # Reemplaza 'datos.csv' con el nombre de tu archivo CSV
 data = pd.read_csv(csv_file)
 
 if __name__ == '__main__':
